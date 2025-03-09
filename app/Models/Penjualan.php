@@ -2,14 +2,38 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Penjualan extends Model
 {
     /** @use HasFactory<\Database\Factories\PenjualanFactory> */
-    use HasFactory, HasUuids;
+    use HasFactory;
+
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($model) {
+            $model->id = \DB::transaction(function () {
+                $prefix = 'PNJ';
+                $date = now()->format('ymd');
+                $lastPenjualan = static::where('id', 'like', $prefix . $date . '%')
+                                     ->orderBy('id', 'desc')
+                                     ->lockForUpdate()
+                                     ->first();
+                
+                if (!$lastPenjualan) {
+                    $newNumber = '001';
+                } else {
+                    $lastNumber = substr($lastPenjualan->id, -3);
+                    $newNumber = str_pad((int)$lastNumber + 1, 3, '0', STR_PAD_LEFT);
+                }
+                
+                return $prefix . $date . $newNumber;
+            });
+        });
+    }
 
     protected $table = 'penjualan';
     protected $keyType = 'string';

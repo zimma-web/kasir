@@ -26,6 +26,10 @@ class CheckoutController extends Controller
 
     public function store(Request $request)
     {
+        if (!$request->ajax()) {
+            return response()->json(['error' => 'Invalid request method'], 400);
+        }
+
         $validated = $request->validate([
             'jenis_pelanggan' => 'required|in:bukan_member,member_baru,member',
             'nama_pelanggan' => [
@@ -60,17 +64,42 @@ class CheckoutController extends Controller
         ]);
 
         $totalHarga = collect($validated['produk'])->sum(fn($item) => $item['harga'] * $item['quantity']);
+
+        // Validate payment amount
+        if (!is_numeric($validated['nominal_bayar']) || $validated['nominal_bayar'] <= 0) {
+            \Log::error('Invalid payment amount');
+            return response()->json([
+                'errors' => ['error' => ['Nominal pembayaran tidak valid!']]
+            ], 422);
+        }
+
         $nominalBayar = $validated['nominal_bayar'];
         $kembalian = $nominalBayar - $totalHarga;
 
+        // Validate change calculation
         if ($kembalian < 0) {
-            return back()->withErrors(['nominal_bayar' => 'Jumlah yang dibayarkan kurang dari total harga!']);
+            \Log::error('Insufficient payment amount');
+            return response()->json([
+                'errors' => ['error' => ['Jumlah yang dibayarkan kurang dari total harga!']]
+            ], 422);
         }
 
         $pelangganId = null;
 
+        \Log::info('Starting checkout process');
+        \Log::info('Validated data:', $validated);
+        
+        // Validate user authentication
+        if (!auth()->check()) {
+            \Log::error('User not authenticated');
+            return response()->json([
+                'errors' => ['error' => ['Anda harus login untuk melakukan transaksi!']]
+            ], 401);
+        }
+
         DB::beginTransaction();
         try {
+            \Log::info('Beginning transaction');
             if ($validated['jenis_pelanggan'] === 'member_baru') {
                 $pelanggan = Pelanggan::create([
                     'nama_pelanggan' => $validated['nama_pelanggan'],
@@ -82,7 +111,9 @@ class CheckoutController extends Controller
             } elseif ($validated['jenis_pelanggan'] === 'member') {
                 $pelanggan = Pelanggan::where('nama_pelanggan', $validated['nama_pelanggan'])->first();
                 if (!$pelanggan) {
-                    return back()->withErrors(['nama_pelanggan' => 'Nama pelanggan tidak ditemukan!']);
+                    return response()->json([
+                        'errors' => ['nama_pelanggan' => ['Nama pelanggan tidak ditemukan!']]
+                    ], 422);
                 }
 
                 $pelanggan->update([
@@ -92,43 +123,90 @@ class CheckoutController extends Controller
                 $pelangganId = $pelanggan->id;
             }
 
-            $penjualan = Penjualan::create([
-                'tanggal_penjualan' => Carbon::now(),
+            \Log::info('Creating Penjualan record with data:', [
                 'total_harga' => $totalHarga,
                 'nominal_bayar' => $nominalBayar,
                 'kembalian' => $kembalian,
                 'user_id' => auth()->user()->id,
-                'pelanggan_id' => $pelangganId,
+                'pelanggan_id' => $pelangganId
             ]);
 
-            foreach ($validated['produk'] as $produk) {
-                $produkModel = Produk::find($produk['produk_id']);
-
-                if ($produkModel->stok < $produk['quantity']) {
-                    DB::rollBack();
-                    return redirect()->route('cart.index')->with('error', 'Stok produk ' . $produkModel->nama_produk . ' tidak mencukupi!');
-                }
-
-                DetailPenjualan::create([
-                    'penjualan_id' => $penjualan->id,
-                    'produk_id' => $produk['produk_id'],
-                    'nama_produk' => $produkModel->nama_produk,
-                    'jumlah_produk' => $produk['quantity'],
-                    'subtotal' => $produk['quantity'] * $produk['harga'],
+            try {
+                $penjualan = Penjualan::create([
+                    'tanggal_penjualan' => Carbon::now(),
+                    'total_harga' => $totalHarga,
+                    'nominal_bayar' => $nominalBayar,
+                    'kembalian' => $kembalian,
+                    'user_id' => auth()->user()->id,
+                    'pelanggan_id' => $pelangganId,
                 ]);
+                \Log::info('Penjualan created successfully with ID: ' . $penjualan->id);
+            } catch (\Exception $e) {
+                \Log::error('Failed to create Penjualan record: ' . $e->getMessage());
+                throw $e;
+            }
 
-                $produkModel->decrement('stok', $produk['quantity']);
+            \Log::info('Processing product details for penjualan ID: ' . $penjualan->id);
+            
+            foreach ($validated['produk'] as $index => $produk) {
+                \Log::info('Processing product ' . ($index + 1) . ' of ' . count($validated['produk']));
+                
+                try {
+                    $produkModel = Produk::find($produk['produk_id']);
+                    \Log::info('Found product:', ['id' => $produkModel->id, 'name' => $produkModel->nama_produk, 'current_stock' => $produkModel->stok]);
+
+                    if ($produkModel->stok < $produk['quantity']) {
+                        \Log::warning('Insufficient stock for product', [
+                            'product_id' => $produkModel->id,
+                            'requested_quantity' => $produk['quantity'],
+                            'available_stock' => $produkModel->stok
+                        ]);
+                        DB::rollBack();
+                        return response()->json([
+                            'errors' => ['error' => ['Stok produk ' . $produkModel->nama_produk . ' tidak mencukupi!']]
+                        ], 422);
+                    }
+
+                    DetailPenjualan::create([
+                        'penjualan_id' => $penjualan->id,
+                        'produk_id' => $produk['produk_id'],
+                        'nama_produk' => $produkModel->nama_produk,
+                        'jumlah_produk' => $produk['quantity'],
+                        'subtotal' => $produk['quantity'] * $produk['harga']
+                    ]);
+
+                    $produkModel->decrement('stok', $produk['quantity']);
+                    \Log::info('Stock updated for product: ' . $produkModel->nama_produk);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to process product: ' . $e->getMessage());
+                    throw $e;
+                }
             }
 
             DB::commit();
+            \Log::info('Transaction committed successfully');
+            \Log::info('Penjualan ID: ' . $penjualan->id);
 
             session()->forget('cart');
 
-            return redirect()->route('checkout.success', ['id' => $penjualan->id])
-                ->with('success', 'Transaksi berhasil disimpan!');
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaksi berhasil disimpan!',
+                'redirect' => route('checkout.success', ['id' => $penjualan->id])
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Terjadi kesalahan saat memproses transaksi!']);
+            \Log::error('Checkout Error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            \Log::error('Previous exception: ' . ($e->getPrevious() ? $e->getPrevious()->getMessage() : 'None'));
+            
+            $errorMessage = config('app.debug') 
+                ? $e->getMessage() 
+                : 'Terjadi kesalahan saat memproses transaksi!';
+            
+            return response()->json([
+                'errors' => ['error' => [$errorMessage]]
+            ], 500);
         }
     }
 

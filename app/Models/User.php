@@ -4,7 +4,6 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -12,7 +11,29 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasUuids;
+    use HasFactory, Notifiable;
+
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($model) {
+            // Get last ID
+            $lastId = static::orderBy('id', 'desc')->first()?->id;
+            
+            if (!$lastId) {
+                // If no existing records, start with USR1
+                $newId = 'USR1';
+            } else {
+                // Extract number from last ID
+                $lastNumber = intval(substr($lastId, 3));
+                // Generate new ID
+                $newId = 'USR' . ($lastNumber + 1);
+            }
+            
+            $model->id = $newId;
+        });
+    }
     /**
      * The attributes that are mass assignable.
      *

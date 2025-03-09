@@ -51,7 +51,13 @@ class PelangganController extends Controller
 
     public function destroy(Pelanggan $pelanggan)
     {
-        $pelanggan->delete();
-        return redirect()->route('pelanggan.index')->with('success', 'Data pelanggan berhasil dihapus');
+        try {
+            $pelanggan->delete();
+            return redirect()->route('pelanggan.index')
+                ->with('success', 'Data pelanggan berhasil dihapus');
+        } catch (\Exception $e) {
+            return redirect()->route('pelanggan.index')
+                ->with('error', 'Tidak dapat menghapus pelanggan yang memiliki riwayat transaksi');
+        }
     }
 }

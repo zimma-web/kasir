@@ -29,14 +29,17 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
+        $message = '';
 
         if ($user->role === 'admin') {
-            return redirect()->route('dashboard');
+            $message = 'Selamat datang kembali, Admin!';
+            return redirect()->route('dashboard')->with('login_notification', $message);
         } elseif ($user->role === 'petugas') {
-            return redirect()->route('pembelian.index');
+            $message = 'Selamat datang kembali, Petugas!';
+            return redirect()->route('pembelian.index')->with('login_notification', $message);
         }
 
-        return redirect('/');
+        return redirect('/')->with('login_notification', 'Selamat datang kembali!');
     }
 
     /**

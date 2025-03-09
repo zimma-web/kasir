@@ -1,18 +1,19 @@
+
 <nav x-data="{ open: false }" class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
+        <div class="flex h-16">
+            <div class="flex-1 flex">
                 <!-- Logo -->
-                <div class="shrink-0 flex items-center">
+                <div class="flex-shrink-0 flex items-center">
                     @if(Auth::user()->role === 'admin')
                     <a href="{{ route('dashboard') }}">
-                        <img src="{{ asset('assets/logo.png') }}" alt="logo"
+                        <img src="{{ asset('assets/logo_kasir.png') }}" alt="logo"
                             class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
                     </a>
                     @else
                     <a href="{{ route('pembelian.index') }}">
-                        <img src="{{ asset('assets/logo.png') }}" alt="logo"
+                        <img src="{{ asset('assets/logo_kasir.png') }}" alt="logo"
                             class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
                     </a>
                     @endif
@@ -38,18 +39,18 @@
                             ];
                         }
                     @endphp
-                    @foreach ($links as $link)
-                        <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                    <nav class="hidden sm:flex sm:items-center sm:space-x-8 sm:ml-10">
+                        @foreach ($links as $link)
                             <x-nav-link :href="route($link['route'])" :active="request()->routeIs($link['route'] . '*')">
                                 {{ __($link['label']) }}
                             </x-nav-link>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </nav>
                 @endif
             </div>
 
             <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+            <div class="flex items-center ml-auto mr-4">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button
@@ -111,6 +112,7 @@
                     $links = [
                         ['route' => 'dashboard', 'label' => 'Dashboard'],
                         ['route' => 'user.index', 'label' => 'User'],
+                        ['route' => 'pelanggan.index', 'label' => 'Member'],
                         ['route' => 'produk.index', 'label' => 'Produk'],
                         ['route' => 'stok.index', 'label' => 'Stok'],
                     ];

@@ -151,11 +151,23 @@
                         hargaElement.text(response.new_total);
                         totalHargaElement.text(response.total_harga);
                     } else {
-                        alert("Gagal memperbarui jumlah produk!");
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Gagal memperbarui jumlah produk!',
+                            icon: 'error',
+                            confirmButtonColor: '#d33',
+                            confirmButtonText: 'OK'
+                        });
                     }
                 },
                 error: function () {
-                    alert("Terjadi kesalahan saat memperbarui keranjang!");
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Terjadi kesalahan saat memperbarui keranjang!',
+                        icon: 'error',
+                        confirmButtonColor: '#d33',
+                        confirmButtonText: 'OK'
+                    });
                 }
             });
         });
@@ -163,20 +175,47 @@
         $(".remove-button").click(function (e) {
             e.preventDefault();
             let produkId = $(this).data("produk-id");
-            $.ajax({
-                url: "{{ route('cart.remove') }}",
-                type: "POST",
-                data: {
-                    _token: "{{ csrf_token() }}",
-                    produk_id: produkId
-                },
-                success: function (response) {
-                    if (response.success) {
-                        location.reload();
-                        alert("Produk berhasil dihapus dari keranjang!");
-                    } else {
-                        alert("Gagal menghapus produk!");
-                    }
+            
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Produk ini akan dihapus dari keranjang!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{{ route('cart.remove') }}",
+                        type: "POST",
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                            produk_id: produkId
+                        },
+                        success: function (response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    title: 'Berhasil!',
+                                    text: 'Produk berhasil dihapus dari keranjang!',
+                                    icon: 'success',
+                                    confirmButtonColor: '#3085d6',
+                                    confirmButtonText: 'OK'
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: 'Gagal menghapus produk!',
+                                    icon: 'error',
+                                    confirmButtonColor: '#d33',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        }
+                    });
                 }
             });
         });

@@ -65,26 +65,34 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $validatedData = $request->validate([
-            'username' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users,username,' . $user->id,
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8',
             'nama_lengkap' => 'required|string|max:255',
-            'role' => 'required|string|max:50',
+            'role' => 'required|string|in:admin,petugas',
         ]);
 
-        $user->username = $validatedData['username'];
-        $user->email = $validatedData['email'];
+        try {
+            $user->username = $validatedData['username'];
+            $user->email = $validatedData['email'];
+            $user->nama_lengkap = $validatedData['nama_lengkap'];
+            $user->role = $validatedData['role'];
 
-        if (!empty($validatedData['password'])) {
-            $user->password = Hash::make($validatedData['password']);
+            if (!empty($validatedData['password'])) {
+                $user->password = Hash::make($validatedData['password']);
+            }
+
+            $user->save();
+
+            return redirect()
+                ->route('user.index')
+                ->with('success', 'User berhasil diperbarui!');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat memperbarui user. ' . $e->getMessage());
         }
-
-        $user->nama_lengkap = $validatedData['nama_lengkap'];
-        $user->role = $validatedData['role'];
-
-        $user->save();
-
-        return redirect()->route('user.index')->with('success', 'User berhasil diperbarui!');
     }
 
     public function destroy(User $user)

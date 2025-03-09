@@ -7,7 +7,7 @@
 
     <section class="dark:bg-gray-900 p-5">
         <div class="mx-auto max-w-screen-xl px-4 lg:px-12">
-            <form action="{{ route('checkout.store') }}" method="POST">
+            <form action="{{ route('checkout.store') }}" method="POST" id="checkoutForm">
                 @csrf
                 <div class="grid lg:grid-cols-2 gap-10">
                     <div class="space-y-6">
@@ -95,9 +95,6 @@
                                 <input type="number" id="nominal_bayar" name="nominal_bayar"
                                     class="w-full rounded-md border-gray-300 px-4 py-3 text-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                     placeholder="Masukkan jumlah uang yang dibayarkan">
-                                @error('nominal_bayar')
-                                    <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ $message }}</p>
-                                @enderror
                             </div>
                             <div class="flex justify-between mt-4">
                                 <p class="text-xl font-semibold">Total Harga</p>
@@ -137,7 +134,8 @@
             daftarMember: document.getElementById('daftar_member'),
             formPelanggan: document.getElementById('form_pelanggan'),
             cariMember: document.getElementById('cari_member'),
-            nominalBayarWrapper: document.getElementById('nominal_bayar_wrapper')
+            nominalBayarWrapper: document.getElementById('nominal_bayar_wrapper'),
+            checkoutForm: document.getElementById('checkoutForm')
         };
 
         const formatCurrency = (amount) => {
@@ -235,16 +233,126 @@
                     }
                 })
                 .catch(() => {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Terjadi kesalahan saat mencari member.',
+                        icon: 'error',
+                        confirmButtonColor: '#d33',
+                        confirmButtonText: 'OK'
+                    });
                     elements.daftarMember.classList.add('hidden');
-                    elements.statusMember.textContent = "Terjadi kesalahan saat mencari member.";
                     toggleFormVisibility(false);
                 });
         };
+
+        // Handle form submission
+        elements.checkoutForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            try {
+                const formData = new FormData(this);
+                
+                // Log form data for debugging
+                console.log('Form Data:');
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + pair[1]);
+                }
+
+                // Validate required fields
+                const jenisPelanggan = formData.get('jenis_pelanggan');
+                const nominalBayar = formData.get('nominal_bayar');
+
+                if (!nominalBayar) {
+                    throw new Error('Nominal bayar harus diisi!');
+                }
+
+                if (jenisPelanggan === 'member_baru') {
+                    if (!formData.get('nama_pelanggan')) throw new Error('Nama pelanggan harus diisi!');
+                    if (!formData.get('alamat')) throw new Error('Alamat harus diisi!');
+                    if (!formData.get('nomor_telepon')) throw new Error('Nomor telepon harus diisi!');
+                }
+
+                if (jenisPelanggan === 'member' && !formData.get('nama_pelanggan')) {
+                    throw new Error('Nama member harus diisi!');
+                }
+
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => Promise.reject(data));
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Berhasil!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = data.redirect;
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    let errorMessage = '';
+                    if (error.errors) {
+                        Object.values(error.errors).forEach(messages => {
+                            errorMessage += messages.join('\n') + '\n';
+                        });
+                    } else if (error.message) {
+                        errorMessage = error.message;
+                    } else {
+                        errorMessage = 'Terjadi kesalahan saat memproses transaksi.';
+                    }
+                    
+                    Swal.fire({
+                        title: 'Error!',
+                        text: errorMessage.trim(),
+                        icon: 'error',
+                        confirmButtonColor: '#d33',
+                        confirmButtonText: 'OK'
+                    });
+                });
+            } catch (error) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'OK'
+                });
+            }
+        });
 
         elements.namaMemberInput.addEventListener('input', cekMember);
         elements.nominalBayarInput.addEventListener('input', hitungKembalian);
         elements.jenisPelangganRadios.forEach(radio => radio.addEventListener('change', togglePelangganForm));
 
         togglePelangganForm();
+
+        // Show error messages from Laravel validation if any
+        @if ($errors->any())
+            Swal.fire({
+                title: 'Error!',
+                html: '{!! implode("<br>", $errors->all()) !!}',
+                icon: 'error',
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'OK'
+            });
+        @endif
     });
 </script>

@@ -20,7 +20,9 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['admin'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::resource('user', UserController::class);
+        
         Route::resource('pelanggan', PelangganController::class);
+        
         Route::get('/export-excel', [DashboardController::class, 'exportExcel'])->name('export.excel');
         Route::get('/export-pdf', [DashboardController::class, 'exportPDF'])->name('export.pdf');
     });

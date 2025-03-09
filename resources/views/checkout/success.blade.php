@@ -44,19 +44,19 @@
                 </thead>
                 <tbody>
                     @foreach ($penjualan->detailPenjualan as $detail)
-                                        @php
-                                            $hargaSatuan = $detail->jumlah_produk > 0 ? ($detail->subtotal / $detail->jumlah_produk) : 0;
-                                        @endphp
-                                        <tr>
-                                            <td class="text-left">
-                                                {{ $detail->produk?->nama_produk ?? $detail->nama_produk . " (Tidak tersedia)" }}
-                                            </td>
-                                            <td class="text-right">{{ $detail->jumlah_produk }}</td>
-                                            <td class="text-right text-nowrap">
-                                                Rp.{{ number_format($hargaSatuan, 2, ',', '.') }}
-                                            </td>
-                                            <td class="text-right">Rp.{{ number_format($detail->subtotal, 2, ',', '.') }}</td>
-                                        </tr>
+                        @php
+                            $hargaSatuan = $detail->jumlah_produk > 0 ? ($detail->subtotal / $detail->jumlah_produk) : 0;
+                        @endphp
+                        <tr>
+                            <td class="text-left">
+                                {{ $detail->produk?->nama_produk ?? $detail->nama_produk . " (Tidak tersedia)" }}
+                            </td>
+                            <td class="text-right">{{ $detail->jumlah_produk }}</td>
+                            <td class="text-right text-nowrap">
+                                Rp.{{ number_format($hargaSatuan, 2, ',', '.') }}
+                            </td>
+                            <td class="text-right">Rp.{{ number_format($detail->subtotal, 2, ',', '.') }}</td>
+                        </tr>
                     @endforeach
                 </tbody>
                 <tfoot>
@@ -86,7 +86,7 @@
 
     <div class="text-center mt-4">
         @if (auth()->user()->role === 'petugas')
-            <button onclick="printStruk()"
+            <button onclick="confirmPrint()"
                 class="inline-block bg-gray-700 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-800">Cetak</button>
             <a href="{{ route('pembelian.index') }}"
                 class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">Kembali</a>
@@ -98,6 +98,23 @@
 </x-app-layout>
 
 <script>
+    function confirmPrint() {
+        Swal.fire({
+            title: 'Cetak Struk?',
+            text: "Apakah Anda ingin mencetak struk belanja ini?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, Cetak!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                printStruk();
+            }
+        });
+    }
+
     function printStruk() {
         let struk = document.getElementById('struk-belanja').innerHTML;
         let judul = document.title;
@@ -109,4 +126,15 @@
         document.body.innerHTML = originalContent;
         location.reload();
     }
+
+    // Show success message when transaction is completed
+    @if(session('success'))
+        Swal.fire({
+            title: 'Berhasil!',
+            text: "{{ session('success') }}",
+            icon: 'success',
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'OK'
+        });
+    @endif
 </script>

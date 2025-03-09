@@ -2,7 +2,7 @@
     <div class="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-indigo-200 py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-md w-full bg-white rounded-lg shadow-2xl p-8 space-y-8 transform hover:scale-105 transition-transform duration-300">
             <div>
-                <img class="mx-auto h-16 w-auto" src="{{ asset('assets/logo.png') }}" alt="Logo">
+                <img class="mx-auto h-16 w-auto" src="{{ asset('assets/logo_kasir.png') }}" alt="Logo">
                 <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
                     Selamat Datang
                 </h2>
@@ -13,6 +13,12 @@
 
             <!-- Session Status -->
             <x-auth-session-status class="mb-4" :status="session('status')" />
+
+            @if(session('login_notification'))
+                <div class="mb-4 p-4 rounded-lg bg-green-100 border-l-4 border-green-500 text-green-700">
+                    {{ session('login_notification') }}
+                </div>
+            @endif
 
             <form method="POST" action="{{ route('login') }}" class="mt-8 space-y-6">
                 @csrf
