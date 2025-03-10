@@ -18,78 +18,80 @@
 </head>
 
 <body class="font-sans antialiased">
-    <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div x-data="{ sidebarOpen: false }" class="min-h-screen bg-gray-100 dark:bg-gray-900">
         @include('layouts.navigation')
-
-        @if(session('success'))
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    Swal.fire({
-                        title: 'Berhasil!',
-                        text: "{{ session('success') }}",
-                        icon: 'success',
-                        confirmButtonColor: '#3085d6',
-                        confirmButtonText: 'OK'
+        
+        <div :class="{'shifted': sidebarOpen}" class="main-content">
+            @if(session('success'))
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            title: 'Berhasil!',
+                            text: "{{ session('success') }}",
+                            icon: 'success',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
                     });
-                });
-            </script>
-        @endif
+                </script>
+            @endif
 
-        @if(session('error'))
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: "{{ session('error') }}",
-                        icon: 'error',
-                        confirmButtonColor: '#d33',
-                        confirmButtonText: 'OK'
+            @if(session('error'))
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: "{{ session('error') }}",
+                            icon: 'error',
+                            confirmButtonColor: '#d33',
+                            confirmButtonText: 'OK'
+                        });
                     });
-                });
-            </script>
-        @endif
+                </script>
+            @endif
 
-        @if(session('warning'))
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    Swal.fire({
-                        title: 'Peringatan!',
-                        text: "{{ session('warning') }}",
-                        icon: 'warning',
-                        confirmButtonColor: '#f8bb86',
-                        confirmButtonText: 'OK'
+            @if(session('warning'))
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            title: 'Peringatan!',
+                            text: "{{ session('warning') }}",
+                            icon: 'warning',
+                            confirmButtonColor: '#f8bb86',
+                            confirmButtonText: 'OK'
+                        });
                     });
-                });
-            </script>
-        @endif
+                </script>
+            @endif
 
-        @if(session('login_notification'))
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    Swal.fire({
-                        title: 'Selamat Datang!',
-                        text: "{{ session('login_notification') }}",
-                        icon: 'success',
-                        confirmButtonColor: '#3085d6',
-                        confirmButtonText: 'OK'
+            @if(session('login_notification'))
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            title: 'Selamat Datang!',
+                            text: "{{ session('login_notification') }}",
+                            icon: 'success',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
                     });
-                });
-            </script>
-        @endif
+                </script>
+            @endif
 
-        <!-- Page Heading -->
-        @isset($header)
-            <header class="bg-white dark:bg-gray-800 shadow">
-                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                    {{ $header }}
-                </div>
-            </header>
-        @endisset
+            <!-- Page Heading -->
+            @isset($header)
+                <header class="bg-white dark:bg-gray-800 shadow">
+                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                        {{ $header }}
+                    </div>
+                </header>
+            @endisset
 
-        <!-- Page Content -->
-        <main>
-            {{ $slot }}
-        </main>
+            <!-- Page Content -->
+            <main>
+                {{ $slot }}
+            </main>
+        </div>
     </div>
     <script src="{{ asset('js/jquery.min.js') }}"></script>
 </body>

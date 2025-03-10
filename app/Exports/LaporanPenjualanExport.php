@@ -40,9 +40,9 @@ class LaporanPenjualanExport implements FromCollection, WithHeadings, WithMappin
     {
         return [
             ["LAPORAN PENJUALAN"],
-            ["Toko ABC"],
-            ["Jl. Contoh No. 123, Kota Contoh"],
-            ["Telepon: (021) 123-4567"],
+            ["Toko Gua Tuh"],
+            ["Jl. Cibabat No. 123, Kota Cimahi"],
+            ["Telepon: (831) 123-4567"],
             [],
             [
                 "Periode: " . ($this->startDate && $this->endDate
