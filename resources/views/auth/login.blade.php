@@ -47,7 +47,7 @@
                 <!-- Password -->
                 <div class="rounded-md shadow-sm -space-y-px">
                     <div class="group">
-                        <x-input-label for="password" :value="__('Password')" 
+                        <x-input-label for="password" :value="__('Kata Sandi')" 
                             class="block text-sm font-medium text-gray-700 mb-1" />
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -58,7 +58,7 @@
                             </div>
                             <x-text-input id="password" type="password" name="password" required
                                 class="appearance-none rounded-lg relative block w-full pl-10 px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm transition-colors duration-200"
-                                placeholder="Masukkan Password Anda" />
+                                placeholder="Masukkan Kata Sandi Anda" />
                         </div>
                         <x-input-error :messages="$errors->get('password')" class="mt-2 text-sm text-red-600" />
                     </div>

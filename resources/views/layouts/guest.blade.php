@@ -22,7 +22,7 @@
             @if (request()->is('login'))
                 Silahkan Login
             @elseif (request()->is('register'))
-                Registrasi Petugas
+                Daftar Petugas
             @else
                 {{ __('Silahkan Login') }}
             @endif
