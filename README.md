@@ -1,18 +1,12 @@
-# Aplikasi Kasir Ujikom
+## Tools
 
-Aplikasi Kasir ini adalah aplikasi yang digunakan untuk ujian komprehensif (Ujikom) untuk tujuan pembelajaran dan evaluasi. Aplikasi ini memungkinkan pengguna untuk melakukan transaksi penjualan produk, mengelola data produk, dan memproses pembayaran.
-
-## Persyaratan
-
-Sebelum memulai, pastikan Anda memiliki:
-
--   **PHP** (Disarankan versi terbaru)
+-   **PHP** 
 
 -   **Composer**
 
 -   **Node.js** dan **NPM**
 
--   **XAMPP** (atau server lokal dengan PHP dan MySQL)
+-   **XAMPP / laragon**
 
 -   **Visual Studio Code**
 
@@ -102,7 +96,7 @@ php artisan serve
 
 Gunakan kredensial berikut untuk masuk ke aplikasi:
 
--   **Email** : admin@example.com
+-   **Email** : admin@gmail.com
 
 -   **Password** : admin
 
