@@ -13,6 +13,11 @@ class PembelianController extends Controller
     public function index(Request $request)
     {
         $query = Produk::query();
+        $search = $request->input('search');
+
+        if ($search) {
+            $query->where('nama_produk', 'like', '%' . $search . '%');
+        }
 
         if ($request->has('sort_by')) {
             switch ($request->sort_by) {
@@ -35,6 +40,6 @@ class PembelianController extends Controller
         }
 
         $produk = $query->paginate(8);
-        return view('pembelian.index', compact('produk'));
+        return view('pembelian.index', compact('produk', 'search'));
     }
 }

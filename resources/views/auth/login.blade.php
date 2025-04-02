@@ -1,134 +1,129 @@
-<x-guest-layout>
-    <div class="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-indigo-200 py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full bg-white rounded-lg shadow-2xl p-8 space-y-8 transform hover:scale-105 transition-transform duration-300">
-            <div>
-                <img class="mx-auto h-16 w-auto" src="{{ asset('assets/logo_kasir.png') }}" alt="Logo">
-                <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                    Selamat Datang
-                </h2>
-                <p class="mt-2 text-center text-sm text-gray-600">
-                    Silahkan login untuk melanjutkan
-                </p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Kasir App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-gray-100">
+    <div class="w-full max-w-md p-8 bg-white rounded-xl shadow-lg animate__animated animate__fadeIn">
+        <!-- Logo Section -->
+        <div class="flex justify-center mb-8">
+            <img src="{{ asset('assets/logo_kasir.png') }}" alt="Logo" class="w-32 h-auto animate__animated animate__bounceIn">
+        </div>
+
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Welcome Back!</h2>
+        <p class="text-center text-gray-600 mb-8">Please sign in to your account</p>
+
+        <!-- Session Status -->
+        @if (session('status'))
+            <div class="mb-4 text-sm font-medium text-green-600">
+                {{ session('status') }}
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('login') }}" class="space-y-6" id="loginForm">
+            @csrf
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700">Email</label>
+                <div class="relative">
+                    <input type="email" 
+                           name="email" 
+                           required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('email') border-red-500 @enderror"
+                           value="{{ old('email') }}"
+                           placeholder="Enter your email">
+                    @error('email')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
-            <!-- Session Status -->
-            <x-auth-session-status class="mb-4" :status="session('status')" />
-
-            @if(session('login_notification'))
-                <div class="mb-4 p-4 rounded-lg bg-green-100 border-l-4 border-green-500 text-green-700">
-                    {{ session('login_notification') }}
-                </div>
-            @endif
-
-            <form method="POST" action="{{ route('login') }}" class="mt-8 space-y-6">
-                @csrf
-
-                <!-- Email -->
-                <div class="rounded-md shadow-sm -space-y-px">
-                    <div class="group">
-                        <x-input-label for="email" :value="__('Email')" 
-                            class="block text-sm font-medium text-gray-700 mb-1" />
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400 group-focus-within:text-indigo-500" 
-                                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                                </svg>
-                            </div>
-                            <x-text-input id="email" type="email" name="email" :value="old('email')" required autofocus
-                                class="appearance-none rounded-lg relative block w-full pl-10 px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm transition-colors duration-200"
-                                placeholder="Masukkan Email Anda" />
-                        </div>
-                        <x-input-error :messages="$errors->get('email')" class="mt-2 text-sm text-red-600" />
-                    </div>
-                </div>
-
-                <!-- Password -->
-                <div class="rounded-md shadow-sm -space-y-px">
-                    <div class="group">
-                        <x-input-label for="password" :value="__('Kata Sandi')" 
-                            class="block text-sm font-medium text-gray-700 mb-1" />
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400 group-focus-within:text-indigo-500" 
-                                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <x-text-input id="password" type="password" name="password" required
-                                class="appearance-none rounded-lg relative block w-full pl-10 px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm transition-colors duration-200"
-                                placeholder="Masukkan Kata Sandi Anda" />
-                        </div>
-                        <x-input-error :messages="$errors->get('password')" class="mt-2 text-sm text-red-600" />
-                    </div>
-                </div>
-
-                <div>
-                    <button type="submit"
-                        class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform transition-all duration-300 hover:scale-105 hover:shadow-lg">
-                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                            <svg class="h-5 w-5 text-indigo-200 group-hover:text-indigo-100" 
-                                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                            </svg>
-                        </span>
-                        {{ __('Log in') }}
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700">Password</label>
+                <div class="relative">
+                    <input type="password" 
+                           name="password" 
+                           id="password"
+                           required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('password') border-red-500 @enderror"
+                           placeholder="Enter your password">
+                    <button type="button" 
+                            onclick="togglePassword()"
+                            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" id="eyeIcon" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" id="eyeSlashIcon" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        </svg>
                     </button>
+                    @error('password')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <label class="flex items-center">
+                    <input type="checkbox" name="remember" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <span class="ml-2 text-sm text-gray-600">Remember me</span>
+                </label>
+
+                @if (Route::has('password.request'))
+                    <a href="{{ route('password.request') }}" class="text-sm text-blue-600 hover:text-blue-800 transition-colors duration-200">
+                        Forgot password?
+                    </a>
+                @endif
+            </div>
+
+            <button type="submit" 
+                    class="w-full px-4 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-200 flex items-center justify-center"
+                    id="loginButton">
+                <span>Sign In</span>
+                <svg id="loadingIcon" class="hidden animate-spin ml-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </button>
+        </form>
     </div>
 
-    <!-- Add animation script -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add floating animation to the form container
-            const formContainer = document.querySelector('.max-w-md');
-            formContainer.style.animation = 'float 6s ease-in-out infinite';
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            const eyeSlashIcon = document.getElementById('eyeSlashIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.add('hidden');
+                eyeSlashIcon.classList.remove('hidden');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('hidden');
+                eyeSlashIcon.classList.add('hidden');
+            }
+        }
 
-            // Add input focus effects
-            const inputs = document.querySelectorAll('input');
-            inputs.forEach(input => {
-                input.addEventListener('focus', function() {
-                    this.parentElement.classList.add('ring-2', 'ring-indigo-500', 'ring-opacity-50');
-                });
-                input.addEventListener('blur', function() {
-                    this.parentElement.classList.remove('ring-2', 'ring-indigo-500', 'ring-opacity-50');
-                });
+        $(document).ready(function() {
+            // Add loading state to form submission
+            $('#loginForm').on('submit', function() {
+                $('#loginButton').prop('disabled', true);
+                $('#loadingIcon').removeClass('hidden');
+            });
+
+            // Add animation to form inputs
+            $('input').on('focus', function() {
+                $(this).parent().addClass('transform scale-105');
+            }).on('blur', function() {
+                $(this).parent().removeClass('transform scale-105');
             });
         });
     </script>
-
-    <!-- Add floating animation keyframes -->
-    <style>
-        @keyframes float {
-            0% {
-                transform: translateY(0px);
-            }
-            50% {
-                transform: translateY(-10px);
-            }
-            100% {
-                transform: translateY(0px);
-            }
-        }
-
-        /* Add smooth transitions */
-        .transition-all {
-            transition-property: all;
-            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-            transition-duration: 300ms;
-        }
-
-        /* Add hover effects */
-        .hover\:shadow-lg:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-
-        /* Input focus styles */
-        input:focus {
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-        }
-    </style>
-</x-guest-layout>
+</body>
+</html>

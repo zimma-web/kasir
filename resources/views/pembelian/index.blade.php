@@ -7,8 +7,25 @@
 
     <section class="dark:bg-gray-900 p-3 sm:p-5">
         <div class="mx-auto max-w-screen-xl px-4 lg:px-12">
-            <!-- Top Bar with Sort and Cart -->
+            <!-- Top Bar with Search, Sort and Cart -->
             <div class="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <!-- Search Form -->
+                <form action="{{ route('pembelian.index') }}" method="GET" class="flex-1">
+                    <div class="relative flex items-center">
+                        <input type="text" 
+                               name="search" 
+                               value="{{ $search ?? '' }}"
+                               placeholder="Cari produk..." 
+                               class="w-full pl-4 pr-12 py-2.5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
+                        <button type="submit" 
+                                class="absolute right-0 h-full px-4 text-gray-500 hover:text-blue-500 transition-all duration-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+
                 <!-- Sort Dropdown -->
                 <div class="relative">
                     <button id="sortDropdownButton1" data-dropdown-toggle="dropdownSort1"
@@ -26,25 +43,25 @@
                         class="z-50 hidden w-48 bg-white rounded-xl shadow-lg dark:bg-gray-700 border border-gray-100 dark:border-gray-600">
                         <ul class="py-2 text-sm text-gray-700 dark:text-gray-200">
                             <li>
-                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'termurah']) }}"
+                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'termurah', 'search' => $search ?? null]) }}"
                                     class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600">
                                     💰 Termurah
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'termahal']) }}"
+                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'termahal', 'search' => $search ?? null]) }}"
                                     class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600">
                                     💎 Termahal
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'terbaru']) }}"
+                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'terbaru', 'search' => $search ?? null]) }}"
                                     class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600">
                                     🆕 Terbaru
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'terlama']) }}"
+                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'terlama', 'search' => $search ?? null]) }}"
                                     class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600">
                                     ⏳ Terlama
                                 </a>
@@ -117,7 +134,7 @@
 
             <!-- Pagination -->
             <div class="flex justify-center w-full mt-8">
-                {!! $produk->links('vendor.pagination.custom') !!}
+                {!! $produk->appends(['search' => $search ?? null, 'sort_by' => request('sort_by')])->links('vendor.pagination.custom') !!}
             </div>
         </div>
     </section>

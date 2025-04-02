@@ -92,6 +92,24 @@
     padding: 0.5rem;
 }
 
+/* Dark Mode */
+.dark .side-nav {
+    background-color: #111827;
+}
+
+.dark .nav-toggle {
+    background: #111827;
+}
+
+.dark .side-nav .nav-link:hover {
+    background-color: #1f2937;
+}
+
+.dark .user-profile {
+    background-color: #111827;
+    border-top-color: #1f2937;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
     .side-nav {
