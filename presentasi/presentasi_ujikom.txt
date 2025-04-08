@@ -1,0 +1,553 @@
+PRESENTASI UJIKOM - SISTEM INFORMASI KASIR (POINT OF SALE)
+=========================================================
+
+[SLIDE 1: PEMBUKAAN - DETAIL]
+"Assalamualaikum Wr. Wb.
+Yang saya hormati Bapak/Ibu penguji dan hadirin sekalian.
+
+Judul Project: SISTEM INFORMASI KASIR (POINT OF SALE)
+Berbasis: Web Application dengan Laravel Framework
+Pembuat: [Nama Anda]
+Kelas: [Kelas Anda]
+Sekolah: [Nama Sekolah]
+
+Project ini merupakan implementasi sistem kasir modern yang bertujuan untuk digitalisasi proses transaksi penjualan dan manajemen inventory."
+
+[SLIDE 2: DAFTAR ISI - DETAIL]
+"Dalam presentasi ini, saya akan menjelaskan:
+1. Pendahuluan
+   - Latar belakang
+   - Tujuan pengembangan
+   - Ruang lingkup sistem
+
+2. Analisis Sistem
+   - Identifikasi masalah
+   - Solusi yang ditawarkan
+   - Analisis kebutuhan
+
+3. Teknologi
+   - Framework & bahasa pemrograman
+   - Database
+   - Tools pengembangan
+
+4. Fitur Aplikasi
+   - Core features
+   - Additional features
+   - Security features
+
+5. Database Design
+   - Struktur tabel
+   - Relasi
+   - Optimasi
+
+6. Implementasi
+   - Coding structure
+   - Best practices
+   - Testing
+
+7. Demo
+   - Live demonstration
+   - Use cases
+   - Error handling"
+
+[SLIDE 3: PENDAHULUAN - DETAIL]
+"Latar Belakang:
+
+1. Masalah Pencatatan Manual:
+   - Rentan kesalahan penulisan
+   - Perhitungan manual yang time-consuming
+   - Risiko kehilangan data fisik
+   - Kesulitan dalam pencarian data historis
+
+2. Inventory Management:
+   - Tracking stok manual tidak efisien
+   - Kesulitan prediksi kebutuhan stok
+   - Risiko overstock atau stockout
+   - Tidak ada early warning system
+
+3. Pelaporan:
+   - Pembuatan laporan manual memakan waktu
+   - Risiko kesalahan kalkulasi
+   - Kesulitan analisis trend penjualan
+   - Format laporan tidak standar
+
+4. Kebutuhan Bisnis Modern:
+   - Kecepatan transaksi
+   - Akurasi data
+   - Real-time reporting
+   - Data-driven decision making"
+
+[SLIDE 4: ANALISIS SISTEM - DETAIL]
+"Analisis Permasalahan & Solusi:
+
+1. Masalah Operasional:
+   a) Pencatatan Manual
+      Solusi: 
+      - Digitalisasi proses pencatatan
+      - Automasi perhitungan
+      - Validasi data otomatis
+      - Backup data regular
+
+   b) Manajemen Inventory
+      Solusi:
+      - Real-time stock tracking
+      - Automatic stock update
+      - Low stock alerts
+      - Stock opname digital
+
+   c) Pelaporan
+      Solusi:
+      - Generate laporan otomatis
+      - Multiple format export
+      - Custom periode laporan
+      - Grafik analisis
+
+2. Masalah Teknis:
+   a) Data Consistency
+      Solusi:
+      - Centralized database
+      - Data validation
+      - Transaction logging
+      - Audit trail
+
+   b) User Management
+      Solusi:
+      - Role-based access
+      - Activity logging
+      - Password policy
+      - Session management
+
+3. Kebutuhan Sistem:
+   a) Hardware:
+      - Server/Komputer
+      - Printer kasir
+      - Scanner barcode (opsional)
+      - Backup device
+
+   b) Software:
+      - Web browser
+      - Database server
+      - Web server
+      - Operating system support"
+
+[SLIDE 5: TEKNOLOGI - DETAIL]
+"Teknologi Yang Digunakan:
+
+1. Backend Framework - Laravel 10:
+   a) Keunggulan:
+      - MVC Architecture
+      - Robust security
+      - Extensive libraries
+      - Active community
+      - Great documentation
+
+   b) Fitur Utama:
+      - Eloquent ORM
+      - Blade templating
+      - Artisan CLI
+      - Migration system
+      - Built-in authentication
+
+2. Database - MySQL:
+   a) Keunggulan:
+      - Open source
+      - Reliable performance
+      - Easy maintenance
+      - Wide support
+      - Scalable
+
+   b) Implementasi:
+      - InnoDB engine
+      - Foreign key constraints
+      - Indexing optimization
+      - Transaction support
+
+3. Frontend:
+   a) Tailwind CSS:
+      - Utility-first framework
+      - Responsive design
+      - Custom components
+      - Performance optimized
+
+   b) JavaScript/jQuery:
+      - Dynamic UI updates
+      - Form validation
+      - AJAX requests
+      - Interactive elements
+
+4. Development Tools:
+   a) Visual Studio Code:
+      - Code editing
+      - Git integration
+      - Extensions support
+      - Debugging tools
+
+   b) XAMPP:
+      - Apache server
+      - MySQL database
+      - PHP environment
+      - Testing environment
+
+   c) Git:
+      - Version control
+      - Code backup
+      - Collaboration
+      - Development tracking"
+
+[SLIDE 6: FITUR APLIKASI - DETAIL]
+"Fitur-Fitur Sistem:
+
+1. User Management:
+   a) Multi-level User:
+      - Admin: Full access
+      - Petugas: Limited access
+      
+   b) User Features:
+      - Login/logout system
+      - Password management
+      - Profile settings
+      - Activity log
+
+2. Produk Management:
+   a) Katalog Produk:
+      - Kode produk
+      - Nama produk
+      - Harga
+      - Stok
+
+   b) Stok Management:
+      - Update stok
+      - Stok minimum
+      - Alert sistem
+      - Riwayat stok
+
+3. Pelanggan Management:
+   a) Data Pelanggan:
+      - Informasi pribadi
+      - Riwayat transaksi
+      - Status member
+      - Point/reward
+
+   b) Kategori Pelanggan:
+      - Member
+      - Non-member
+      - Member baru
+
+4. Transaksi System:
+   a) Proses Penjualan:
+      - Pemilihan produk
+      - Quantity input
+      - Kalkulasi otomatis
+      - Pembayaran
+
+   b) Fitur Checkout:
+      - Multiple items
+      - Diskon
+      - Pajak
+      - Struk digital
+
+5. Laporan System:
+   a) Jenis Laporan:
+      - Laporan penjualan
+      - Laporan stok
+      - Laporan pelanggan
+      - Laporan keuangan
+
+   b) Format Export:
+      - PDF
+      - Excel
+      - CSV
+      - Print ready"
+
+[SLIDE 7: DATABASE DESIGN - DETAIL]
+"Struktur Database:
+
+1. Tabel Users:
+   a) Struktur:
+      - id (char[36]) - Primary Key
+      - username (varchar[255])
+      - email (varchar[255])
+      - password (varchar[255])
+      - nama_lengkap (varchar[255])
+      - role (varchar[255])
+      - timestamps (created_at, updated_at)
+
+   b) Relasi:
+      - One-to-Many dengan tabel Penjualan
+      - Constraints dan Indexes untuk optimasi
+
+2. Tabel Produk:
+   a) Struktur:
+      - id (char[36]) - Primary Key
+      - nama_produk (varchar[255])
+      - harga (decimal[10,2])
+      - stok (integer)
+      - gambar (varchar[255])
+      - deleted_at (timestamp) - Soft Delete
+      - timestamps (created_at, updated_at)
+
+   b) Fitur:
+      - Soft delete untuk keamanan data
+      - Tracking stok real-time
+      - Image storage system
+
+3. Tabel Pelanggan:
+   a) Struktur:
+      - id (char[36]) - Primary Key
+      - nama_pelanggan (varchar[255])
+      - alamat (text)
+      - nomor_telepon (varchar[255])
+      - jenis_pelanggan (enum)
+      - deleted_at (timestamp)
+      - timestamps (created_at, updated_at)
+
+   b) Kategori Pelanggan:
+      - bukan_member
+      - member_baru
+      - member
+
+4. Tabel Penjualan:
+   a) Struktur:
+      - id (char[36]) - Primary Key
+      - tanggal_penjualan (date)
+      - total_harga (decimal[10,2])
+      - nominal_bayar (decimal[10,2])
+      - kembalian (decimal[10,2])
+      - pelanggan_id (char[36]) - Foreign Key
+      - user_id (char[36]) - Foreign Key
+      - timestamps (created_at, updated_at)
+
+   b) Relasi:
+      - Belongs to User
+      - Belongs to Pelanggan
+      - Has Many DetailPenjualan
+
+5. Tabel Detail_Penjualan:
+   a) Struktur:
+      - id (char[36]) - Primary Key
+      - penjualan_id (char[36]) - Foreign Key
+      - produk_id (char[36]) - Foreign Key
+      - nama_produk (varchar[255])
+      - jumlah_produk (integer)
+      - subtotal (decimal[10,2])
+      - timestamps (created_at, updated_at)
+
+   b) Fungsi:
+      - Detail item per transaksi
+      - Histori harga produk
+      - Kalkulasi subtotal"
+
+[SLIDE 8: IMPLEMENTASI - DETAIL]
+"Implementasi Sistem:
+
+1. Arsitektur Aplikasi:
+   a) MVC Pattern:
+      - Models: Business logic dan database interaction
+      - Views: User interface dengan Blade
+      - Controllers: Request handling dan response
+
+   b) Service Layer:
+      - Business logic separation
+      - Reusable services
+      - Clean code principles
+
+2. Security Implementation:
+   a) Authentication:
+      - Laravel built-in auth
+      - Custom guards
+      - Remember me functionality
+      - Password reset system
+
+   b) Authorization:
+      - Role-based access control
+      - Policy implementation
+      - Gate definitions
+      - Middleware protection
+
+3. Frontend Implementation:
+   a) Responsive Design:
+      - Mobile-first approach
+      - Breakpoint optimization
+      - Flexible layouts
+      - Cross-browser compatibility
+
+   b) JavaScript Features:
+      - Dynamic cart updates
+      - Real-time calculations
+      - Form validation
+      - AJAX requests
+
+4. Backend Features:
+   a) Data Processing:
+      - Query optimization
+      - Eager loading
+      - Caching implementation
+      - Background jobs
+
+   b) Error Handling:
+      - Custom error pages
+      - Logging system
+      - Exception handling
+      - Debug mode configuration"
+
+[SLIDE 9: DEMO APLIKASI - DETAIL]
+"Demonstrasi Sistem:
+
+1. Login System:
+   a) Multi-user Access:
+      - Admin login demo
+      - Petugas login demo
+      - Role verification
+      - Dashboard access
+
+   b) Security Features:
+      - CSRF protection
+      - Session handling
+      - Failed login attempts
+      - Password requirements
+
+2. Manajemen Produk:
+   a) CRUD Operations:
+      - Tambah produk baru
+      - Edit informasi produk
+      - Hapus produk (soft delete)
+      - Upload gambar produk
+
+   b) Stok Management:
+      - Update stok
+      - Stok minimum alert
+      - Riwayat perubahan
+      - Export data
+
+3. Proses Transaksi:
+   a) Cart System:
+      - Tambah ke keranjang
+      - Update quantity
+      - Remove item
+      - Clear cart
+
+   b) Checkout Process:
+      - Kalkulasi total
+      - Input pembayaran
+      - Hitung kembalian
+      - Generate struk
+
+4. Reporting System:
+   a) Generate Laporan:
+      - Laporan harian
+      - Laporan bulanan
+      - Filter by date range
+      - Filter by kategori
+
+   b) Export Options:
+      - PDF format
+      - Excel format
+      - Print preview
+      - Email report"
+
+[SLIDE 10: PENGEMBANGAN KEDEPAN - DETAIL]
+"Future Development:
+
+1. Additional Features:
+   a) Payment Integration:
+      - Multiple payment methods
+      - Payment gateway
+      - E-wallet integration
+      - Auto-reconciliation
+
+   b) Customer Features:
+      - Loyalty program
+      - Point system
+      - Member benefits
+      - Customer app
+
+2. Technical Improvements:
+   a) Performance:
+      - Cache optimization
+      - Query optimization
+      - Asset compression
+      - Load balancing
+
+   b) Security:
+      - Two-factor authentication
+      - API authentication
+      - Enhanced encryption
+      - Regular security audits
+
+3. Business Analytics:
+   a) Dashboard:
+      - Sales analytics
+      - Customer behavior
+      - Inventory analysis
+      - Profit margins
+
+   b) Reporting:
+      - Custom reports
+      - Automated reporting
+      - Data visualization
+      - Trend analysis"
+
+[SLIDE 11: PENUTUP - DETAIL]
+"Kesimpulan:
+
+1. Manfaat Sistem:
+   a) Operasional:
+      - Efisiensi meningkat
+      - Akurasi data terjamin
+      - Waktu proses lebih cepat
+      - Paperless operation
+
+   b) Manajemen:
+      - Decision making lebih baik
+      - Kontrol inventory optimal
+      - Monitoring real-time
+      - Data terstruktur
+
+2. Hasil Implementasi:
+   a) Sistem:
+      - Reliable dan stabil
+      - User-friendly
+      - Scalable
+      - Maintainable
+
+   b) Bisnis:
+      - Peningkatan efisiensi
+      - Reduksi error
+      - Cost-effective
+      - Customer satisfaction
+
+Terima kasih atas perhatiannya. Saya siap menerima pertanyaan."
+
+[TIPS PRESENTASI]
+1. Persiapkan demo sistem dengan baik
+2. Pastikan semua fitur berfungsi
+3. Siapkan contoh data yang representatif
+4. Antisipasi pertanyaan umum seperti:
+   - Keamanan sistem
+   - Skalabilitas
+   - Handling error
+   - Backup data
+   - Maintenance
+
+[ANTISIPASI PERTANYAAN]
+1. "Bagaimana sistem menangani concurrent users?"
+   - Menggunakan session management Laravel
+   - Database optimization
+   - Caching system
+
+2. "Bagaimana keamanan data transaksi?"
+   - Enkripsi data sensitif
+   - Regular backup
+   - Audit trail
+
+3. "Apa kelebihan sistem ini dibanding yang ada di pasaran?"
+   - Custom sesuai kebutuhan
+   - Mudah dikembangkan
+   - User-friendly
+   - Cost-effective
+
+4. "Bagaimana jika terjadi error sistem?"
+   - Error logging
+   - Failsafe mechanisms
+   - Backup system
+   - Technical support
