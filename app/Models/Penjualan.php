@@ -46,8 +46,68 @@ class Penjualan extends Model
         'nominal_bayar',
         'kembalian',
         'pelanggan_id',
-        'user_id'
+        'user_id',
+        'points_earned',
+        'points_used',
+        'points_discount'
     ];
+
+    /**
+     * Calculate final total after points discount
+     */
+    public function getFinalTotalAttribute(): float
+    {
+        return $this->total_harga - $this->points_discount;
+    }
+
+    /**
+     * Process points for the transaction
+     */
+    public function processPoints(?int $pointsToUse = null): void
+    {
+        if (!$this->pelanggan_id) {
+            return;
+        }
+
+        $pelanggan = $this->pelanggan;
+        $pointSetting = PointSetting::first();
+        $conversionRate = $pointSetting ? $pointSetting->points_to_rupiah : 1;
+
+        // Calculate points earned based on current settings
+        $pointsEarned = PointSetting::calculatePointsEarned($this->total_harga);
+        $this->points_earned = $pointsEarned;
+
+        // Process points usage if requested
+        if ($pointsToUse > 0) {
+            try {
+                // Calculate discount using conversion rate
+                $discount = $pointsToUse * $conversionRate;
+                
+                if ($pointsToUse > $pelanggan->points) {
+                    throw new \Exception('Poin tidak mencukupi');
+                }
+
+                if ($discount > $this->total_harga) {
+                    throw new \Exception('Nilai diskon melebihi total harga');
+                }
+
+                $pelanggan->decrement('points', $pointsToUse);
+                $this->points_used = $pointsToUse;
+                $this->points_discount = $discount;
+                
+                // Update total after discount
+                $this->total_harga -= $discount;
+                $this->kembalian = $this->nominal_bayar - $this->total_harga;
+            } catch (\Exception $e) {
+                throw new \Exception('Gagal memproses poin: ' . $e->getMessage());
+            }
+        }
+
+        // Add earned points to customer's balance
+        $pelanggan->addPoints($pointsEarned);
+        
+        $this->save();
+    }
 
     public function pelanggan()
     {

@@ -5,6 +5,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PembelianController;
+use App\Http\Controllers\PointSettingController;
 use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StokController;
@@ -22,6 +23,16 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('user', UserController::class);
         
         Route::resource('pelanggan', PelangganController::class);
+        
+        // Point Settings Routes
+        Route::prefix('point-settings')->name('point-settings.')->group(function () {
+            Route::get('/', [PointSettingController::class, 'index'])->name('index');
+            Route::post('/conversion-rate', [PointSettingController::class, 'updateConversionRate'])->name('conversion.update');
+            Route::get('/conversion-rate', [PointSettingController::class, 'getConversionRate'])->name('conversion.get');
+            Route::post('/{id}', [PointSettingController::class, 'updatePoints'])->name('update');
+            Route::post('/{id}/reset', [PointSettingController::class, 'resetPoints'])->name('reset');
+            Route::get('/{id}/history', [PointSettingController::class, 'memberHistory'])->name('history');
+        });
         
         Route::get('/export-excel', [DashboardController::class, 'exportExcel'])->name('export.excel');
         Route::get('/export-pdf', [DashboardController::class, 'exportPDF'])->name('export.pdf');

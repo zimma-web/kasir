@@ -1,0 +1,573 @@
+PANDUAN IMPLEMENTASI EXPORT PDF DAN EXCEL
+=======================================
+
+1. INSTALASI PACKAGE
+-------------------
+Jalankan perintah berikut di terminal:
+```
+composer require barryvdh/laravel-dompdf
+composer require maatwebsite/excel
+```
+
+2. BUAT FILE EXPORT CLASS
+------------------------
+Buat file: app/Exports/LaporanPenjualanExport.php
+```php
+<?php
+namespace App\Exports;
+
+use App\Models\Penjualan;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use Carbon\Carbon;
+
+setlocale(LC_TIME, 'id_ID');
+Carbon::setLocale('id');
+
+class LaporanPenjualanExport implements FromCollection, WithHeadings, WithMapping, WithEvents
+{
+    protected $startDate;
+    protected $endDate;
+
+    public function __construct($startDate, $endDate)
+    {
+        $this->startDate = $startDate;
+        $this->endDate = $endDate;
+    }
+
+    public function collection()
+    {
+        return Penjualan::with(['pelanggan', 'detailPenjualan.produk'])
+            ->when($this->startDate && $this->endDate, function ($query) {
+                return $query->whereBetween('tanggal_penjualan', [$this->startDate, $this->endDate]);
+            })
+            ->orderBy('tanggal_penjualan', 'desc')
+            ->orderBy('pelanggan_id', 'desc')
+            ->get();
+    }
+
+    public function headings(): array
+    {
+        return [
+            ["LAPORAN PENJUALAN"],
+            ["Toko ABC"],
+            ["Jl. Contoh No. 123, Kota Contoh"],
+            ["Telepon: (021) 123-4567"],
+            [],
+            [
+                "Periode: " . ($this->startDate && $this->endDate
+                    ? Carbon::parse($this->startDate)->translatedFormat('d F Y') .
+                    " sampai " .
+                    Carbon::parse($this->endDate)->translatedFormat('d F Y')
+                    : "Semua Data")
+            ],
+            [],
+            [
+                "Nama Pelanggan",
+                "Tanggal Penjualan",
+                "Nama Produk",
+                "Jumlah",
+                "Harga Satuan",
+                "Subtotal",
+                "Total Transaksi"
+            ]
+        ];
+    }
+
+    public function map($penjualan): array
+    {
+        $rows = [];
+        $totalTransaksiDisplayed = [];
+
+        foreach ($penjualan->detailPenjualan as $detail) {
+            $key = $penjualan->pelanggan_id . '-' . $penjualan->tanggal_penjualan;
+            $hargaSatuan = $detail->jumlah_produk > 0 ? ($detail->subtotal / $detail->jumlah_produk) : 0;
+            $totalTransaksi = isset($totalTransaksiDisplayed[$key]) ? '' : 'Rp.' . number_format($penjualan->total_harga, 2, ',', '.');
+            $totalTransaksiDisplayed[$key] = true;
+
+            $rows[] = [
+                $penjualan->pelanggan ? $penjualan->pelanggan->nama_pelanggan : 'Tidak Diketahui',
+                Carbon::parse($penjualan->tanggal_penjualan)->translatedFormat('d F Y'),
+                $detail->produk?->nama_produk ?? $detail->nama_produk . " (Tidak tersedia)",
+                $detail->jumlah_produk,
+                'Rp.' . number_format($hargaSatuan, 2, ',', '.'),
+                'Rp.' . number_format($detail->subtotal, 2, ',', '.'),
+                $totalTransaksi,
+            ];
+        }
+
+        return $rows;
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function (AfterSheet $event) {
+                $sheet = $event->sheet->getDelegate();
+
+                // Merge cells for header
+                $sheet->mergeCells('A1:G1');
+                $sheet->mergeCells('A2:G2');
+                $sheet->mergeCells('A3:G3');
+                $sheet->mergeCells('A4:G4');
+                $sheet->mergeCells('A5:G5');
+                $sheet->mergeCells('A6:G6');
+
+                // Style for main title
+                $sheet->getStyle('A1:G1')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 16,
+                    ],
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                    ],
+                ]);
+
+                // Style for header info
+                $sheet->getStyle('A2:G4')->applyFromArray([
+                    'font' => [
+                        'size' => 12,
+                    ],
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                    ],
+                ]);
+
+                // Style for period
+                $sheet->getStyle('A6:G6')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 12,
+                    ],
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                    ],
+                ]);
+
+                $highestRow = $sheet->getHighestRow();
+                $totalPendapatan = $this->calculateTotalPendapatan($sheet);
+
+                // Add total row
+                $sheet->setCellValue('A' . ($highestRow + 2), 'Total Pendapatan');
+                $sheet->setCellValue('G' . ($highestRow + 2), $totalPendapatan);
+
+                // Style for total row
+                $sheet->mergeCells('A' . ($highestRow + 2) . ':F' . ($highestRow + 2));
+                $sheet->getStyle('A' . ($highestRow + 2) . ':G' . ($highestRow + 2))->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 12,
+                    ],
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_RIGHT,
+                    ],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => [
+                            'argb' => 'CCCCCC',
+                        ],
+                    ],
+                ]);
+
+                // Merge cells for better readability
+                $this->mergeTotalTransactionCells($sheet);
+                $this->mergeCustomerAndDateCells($sheet);
+
+                // Style for data cells
+                $cellRange = "A8:G{$highestRow}";
+                $sheet->getStyle($cellRange)->applyFromArray([
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color' => ['argb' => '000000'],
+                        ],
+                    ],
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                    ],
+                    'font' => [
+                        'bold' => false,
+                        'size' => 11,
+                    ],
+                ]);
+
+                // Style for column headers
+                $sheet->getStyle('A8:G8')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 12,
+                    ],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => [
+                            'argb' => 'CCCCCC'
+                        ]
+                    ],
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'wrapText' => true,
+                    ],
+                ]);
+
+                // Auto-size columns
+                foreach (range('A', 'G') as $col) {
+                    $sheet->getColumnDimension($col)->setAutoSize(true);
+                }
+            }
+        ];
+    }
+
+    private function calculateTotalPendapatan($sheet)
+    {
+        $highestRow = $sheet->getHighestRow();
+        $totalPendapatan = 0;
+
+        for ($row = 9; $row <= $highestRow; $row++) {
+            $totalTransaksi = $sheet->getCell('G' . $row)->getValue();
+            if ($totalTransaksi) {
+                $totalPendapatan += (float) str_replace(['Rp.', '.', ','], ['', '', '.'], $totalTransaksi);
+            }
+        }
+
+        return 'Rp.' . number_format($totalPendapatan, 2, ',', '.');
+    }
+
+    private function mergeCustomerAndDateCells($sheet)
+    {
+        $highestRow = $sheet->getHighestRow();
+        $startRow = 9;
+        $currentRow = $startRow;
+
+        while ($currentRow <= $highestRow) {
+            $currentPelanggan = $sheet->getCell('A' . $currentRow)->getValue();
+            $currentTanggal = $sheet->getCell('B' . $currentRow)->getValue();
+            $nextRow = $currentRow + 1;
+
+            while ($nextRow <= $highestRow) {
+                $nextPelanggan = $sheet->getCell('A' . $nextRow)->getValue();
+                $nextTanggal = $sheet->getCell('B' . $nextRow)->getValue();
+
+                if ($nextPelanggan === $currentPelanggan && $nextTanggal === $currentTanggal) {
+                    $nextRow++;
+                } else {
+                    break;
+                }
+            }
+
+            if ($nextRow - $currentRow > 1) {
+                $sheet->mergeCells("A{$currentRow}:A" . ($nextRow - 1));
+                $sheet->mergeCells("B{$currentRow}:B" . ($nextRow - 1));
+            }
+
+            $currentRow = $nextRow;
+        }
+    }
+
+    private function mergeTotalTransactionCells($sheet)
+    {
+        $highestRow = $sheet->getHighestRow();
+        $startRow = 9;
+        $currentRow = $startRow;
+
+        while ($currentRow <= $highestRow) {
+            $currentPelanggan = $sheet->getCell('A' . $currentRow)->getValue();
+            $currentTanggal = $sheet->getCell('B' . $currentRow)->getValue();
+            $nextRow = $currentRow + 1;
+
+            while ($nextRow <= $highestRow) {
+                $nextPelanggan = $sheet->getCell('A' . $nextRow)->getValue();
+                $nextTanggal = $sheet->getCell('B' . $nextRow)->getValue();
+
+                if ($nextPelanggan === $currentPelanggan && $nextTanggal === $currentTanggal) {
+                    $nextRow++;
+                } else {
+                    break;
+                }
+            }
+
+            if ($nextRow - $currentRow > 1) {
+                $sheet->mergeCells("G{$currentRow}:G" . ($nextRow - 1));
+            }
+
+            $currentRow = $nextRow;
+        }
+    }
+}
+```
+
+3. BUAT TEMPLATE PDF
+-------------------
+Buat file: resources/views/exports/laporan_pdf.blade.php
+```php
+@php
+    use Carbon\Carbon;
+    setlocale(LC_TIME, 'id_ID');
+    Carbon::setLocale('id');
+
+    $startDateFormatted = $startDate ? Carbon::parse($startDate)->translatedFormat('d F Y') : null;
+    $endDateFormatted = $endDate ? Carbon::parse($endDate)->translatedFormat('d F Y') : null;
+    $grandTotal = 0;
+    $tanggal = Carbon::now()->translatedFormat('d F Y');
+@endphp
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Penjualan</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        h2 {
+            text-align: center;
+            justify-content: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .total-transaksi {
+            font-weight: bold;
+        }
+
+        .header-laporan {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header-laporan h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .header-laporan p {
+            margin: 5px 0;
+        }
+
+        .tanda-tangan {
+            float: right;
+            margin-top: 50px;
+            text-align: center;
+        }
+
+        .tanda-tangan p {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .tanda-tangan .nama {
+            margin-top: 70px;
+            font-weight: bold;
+        }
+
+        .title {
+            text-align: center;
+            font-weight: 600;
+            font-size: x-large;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+        }
+
+        .header-row p {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-laporan">
+        <p style="font-size: x-large; font-weight: 600;">Toko ABC</p>
+        <p style="font-size: 12px;">Jl. Contoh No. 123, Kota Contoh</p>
+        <p style="font-size: 12px;">Telepon: (021) 123-4567</p>
+    </div>
+    <hr>
+    <p class="title">Laporan Penjualan</p>
+
+    @if ($startDateFormatted && $endDateFormatted)
+        <p>Periode: {{ $startDateFormatted }} sampai {{ $endDateFormatted }}</p>
+    @else
+        <div class="header-row">
+            <p>Semua Data</p>
+            <p>Dicetak Oleh: {{ Auth::user()->nama_lengkap }}</p>
+        </div>
+    @endif
+
+    <table>
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Tanggal Penjualan</th>
+                <th>Nama Pelanggan</th>
+                <th>Nama Produk</th>
+                <th>Jumlah</th>
+                <th>Harga Satuan</th>
+                <th>Subtotal</th>
+                <th>Total Transaksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+                $totalTransaksiDisplayed = [];
+                $no = 1;
+            @endphp
+            @foreach ($data as $transaksi)
+                @php
+                    $detailCount = count($transaksi->detailPenjualan);
+                    $key = $transaksi->pelanggan_id . '-' . $transaksi->tanggal_penjualan;
+                    $totalTransaksi = (float) $transaksi->total_harga;
+                    $grandTotal += $totalTransaksi;
+                @endphp
+                @foreach ($transaksi->detailPenjualan as $index => $detail)
+                    @php
+                        $hargaSatuan = $detail->jumlah_produk > 0 ? ($detail->subtotal / $detail->jumlah_produk) : 0;
+                    @endphp
+                    <tr>
+                        @if ($index === 0)
+                            <td rowspan="{{ $detailCount }}">{{ $no++ }}</td>
+                            <td rowspan="{{ $detailCount }}">
+                                {{ Carbon::parse($transaksi->tanggal_penjualan)->translatedFormat('d F Y') }}
+                            </td>
+                            <td rowspan="{{ $detailCount }}">
+                                {{ $transaksi->pelanggan ? $transaksi->pelanggan->nama_pelanggan : 'Tidak Diketahui' }}
+                            </td>
+                        @endif
+                        <td>{{ $detail->produk?->nama_produk ?? $detail->nama_produk . " (Tidak tersedia)" }}</td>
+                        <td>{{ $detail->jumlah_produk }}</td>
+                        <td>Rp.{{ number_format($hargaSatuan, 2, ',', '.') }}</td>
+                        <td>Rp.{{ number_format($detail->subtotal, 2, ',', '.') }}</td>
+                        @if ($index === 0)
+                            <td rowspan="{{ $detailCount }}" class="total-transaksi">
+                                Rp.{{ number_format($totalTransaksi, 2, ',', '.') }}</td>
+                        @endif
+                    </tr>
+                @endforeach
+            @endforeach
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="7" style="text-align: right; font-weight: bold;">Total Pendapatan:</td>
+                <td class="total-transaksi">Rp.{{ number_format($grandTotal, 2, ',', '.') }}</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="tanda-tangan">
+        <p>Kota Contoh, {{ $tanggal }}</p>
+        <p>Pencetak,</p>
+        <p class="nama">{{ Auth::user()->nama_lengkap }}</p>
+    </div>
+</body>
+</html>
+```
+
+4. UPDATE CONTROLLER
+-------------------
+Buat atau update file: app/Http/Controllers/DashboardController.php
+```php
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Exports\LaporanPenjualanExport;
+use App\Models\Pelanggan;
+use App\Models\Penjualan;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+
+class DashboardController extends Controller
+{
+    public function exportExcel(Request $request)
+    {
+        $startDateRaw = $request->input('start_date');
+        $endDateRaw = $request->input('end_date');
+
+        $startDate = $startDateRaw ? Carbon::createFromFormat('m/d/Y', $startDateRaw)->format('Y-m-d') : null;
+        $endDate = $endDateRaw ? Carbon::createFromFormat('m/d/Y', $endDateRaw)->format('Y-m-d') : null;
+
+        return Excel::download(new LaporanPenjualanExport($startDate, $endDate), 'laporan_penjualan.xlsx');
+    }
+
+    public function exportPDF(Request $request)
+    {
+        $startDateRaw = $request->input('start_date');
+        $endDateRaw = $request->input('end_date');
+
+        $startDate = $startDateRaw ? Carbon::createFromFormat('m/d/Y', $startDateRaw)->format('Y-m-d') : null;
+        $endDate = $endDateRaw ? Carbon::createFromFormat('m/d/Y', $endDateRaw)->format('Y-m-d') : null;
+
+        $data = Penjualan::with(['pelanggan', 'detailPenjualan.produk'])
+            ->when($startDate, function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('tanggal_penjualan', [$startDate, $endDate]);
+            })
+            ->orderBy('tanggal_penjualan', 'desc')
+            ->get();
+
+        $pdf = Pdf::loadView('exports.laporan_pdf', compact('data', 'startDate', 'endDate'));
+        return $pdf->download('laporan_penjualan.pdf');
+    }
+}
+```
+
+5. TAMBAH ROUTES
+---------------
+Tambahkan route berikut di routes/web.php:
+```php
+Route::get('/export-excel', [DashboardController::class, 'exportExcel'])->name('export.excel');
+Route::get('/export-pdf', [DashboardController::class, 'exportPDF'])->name('export.pdf');
+```
+
+6. CONTOH PENGGUNAAN DI VIEW
+---------------------------
+Tambahkan tombol export di view Anda:
+```html
+<a href="{{ route('export.excel') }}" class="btn btn-success">Export Excel</a>
+<a href="{{ route('export.pdf') }}" class="btn btn-danger">Export PDF</a>
+
+<!-- Dengan Filter Tanggal -->
+<a href="{{ route('export.excel', ['start_date' => $startDate, 'end_date' => $endDate]) }}" class="btn btn-success">
+    Export Excel
+</a>
+<a href="{{ route('export.pdf', ['start_date' => $startDate, 'end_date' => $endDate]) }}" class="btn btn-danger">
+    Export PDF
+</a>
+```
+
+CATATAN PENTING:
+---------------
+1. Pastikan sudah menginstall package yang diperlukan
+2. Sesuaikan nama toko, alamat, dan informasi lainnya di template
+3. Sesuaikan model dan relasi sesuai dengan struktur database Anda
+4. Pastikan sudah mengimport semua class yang diperlukan
+5. Sesuaikan format tanggal dan bahasa sesuai kebutuhan

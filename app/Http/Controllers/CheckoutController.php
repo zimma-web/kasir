@@ -32,6 +32,7 @@ class CheckoutController extends Controller
 
         $validated = $request->validate([
             'jenis_pelanggan' => 'required|in:bukan_member,member_baru,member',
+            'points_to_use' => 'nullable|integer|min:0',
             'nama_pelanggan' => [
                 'nullable',
                 'required_if:jenis_pelanggan,member_baru,member',
@@ -131,15 +132,59 @@ class CheckoutController extends Controller
                 'pelanggan_id' => $pelangganId
             ]);
 
+            // Check if points are being used
+            $pointsToUse = $validated['points_to_use'] ?? 0;
+            $pointsDiscount = 0;
+
+            if ($pointsToUse > 0 && $pelangganId) {
+                $pelanggan = Pelanggan::find($pelangganId);
+                if (!$pelanggan) {
+                    return response()->json([
+                        'errors' => ['error' => ['Pelanggan tidak ditemukan!']]
+                    ], 422);
+                }
+
+                if ($pointsToUse > $pelanggan->points) {
+                    return response()->json([
+                        'errors' => ['error' => ['Poin yang digunakan melebihi poin yang tersedia!']]
+                    ], 422);
+                }
+
+                // Get current points conversion rate
+                $pointSetting = \App\Models\PointSetting::first();
+                $conversionRate = $pointSetting ? $pointSetting->points_to_rupiah : 1;
+                
+                // Calculate points discount using conversion rate
+                $pointsDiscount = $pointsToUse * $conversionRate;
+                
+                // Adjust total and change amount
+                $totalHarga = $totalHarga - $pointsDiscount;
+                $kembalian = $nominalBayar - $totalHarga;
+
+                if ($kembalian < 0) {
+                    return response()->json([
+                        'errors' => ['error' => ['Jumlah yang dibayarkan kurang dari total harga setelah diskon poin!']]
+                    ], 422);
+                }
+            }
+
             try {
                 $penjualan = Penjualan::create([
                     'tanggal_penjualan' => Carbon::now(),
-                    'total_harga' => $totalHarga,
+                    'total_harga' => $totalHarga + $pointsDiscount, // Store original total before points discount
                     'nominal_bayar' => $nominalBayar,
                     'kembalian' => $kembalian,
                     'user_id' => auth()->user()->id,
                     'pelanggan_id' => $pelangganId,
+                    'points_used' => $pointsToUse,
+                    'points_discount' => $pointsDiscount,
                 ]);
+
+                // Process points after successful creation
+                if ($pelangganId) {
+                    $penjualan->processPoints($pointsToUse);
+                }
+
                 \Log::info('Penjualan created successfully with ID: ' . $penjualan->id);
             } catch (\Exception $e) {
                 \Log::error('Failed to create Penjualan record: ' . $e->getMessage());
@@ -212,9 +257,8 @@ class CheckoutController extends Controller
 
     public function show($id)
     {
-        $kasir = Penjualan::with('petugas')->findOrFail($id);
-        $penjualan = Penjualan::with(['pelanggan', 'detailPenjualan.produk'])->findOrFail($id);
-        return view('checkout.success', compact('penjualan', 'kasir'));
+        $penjualan = Penjualan::with(['pelanggan', 'detailPenjualan.produk', 'petugas'])->findOrFail($id);
+        return view('checkout.success', compact('penjualan'));
     }
 
     public function cekMember(Request $request)
@@ -227,7 +271,7 @@ class CheckoutController extends Controller
             }
 
             $members = Pelanggan::where('nama_pelanggan', 'LIKE', "%{$namaPelanggan}%")
-                ->select('id', 'nama_pelanggan as nama', 'alamat', 'nomor_telepon')
+                ->select('id', 'nama_pelanggan as nama', 'alamat', 'nomor_telepon', 'points')
                 ->get();
 
             if ($members->isEmpty()) {

@@ -37,13 +37,21 @@ class Pelanggan extends Model
     protected $keyType = 'string';
     public $incrementing = false;
 
-
     protected $fillable = [
         'nama_pelanggan',
         'alamat',
         'nomor_telepon',
-        'jenis_pelanggan'
+        'jenis_pelanggan',
+        'points'
     ];
+
+    /**
+     * Add points to customer's balance
+     */
+    public function addPoints(int $points): void
+    {
+        $this->increment('points', $points);
+    }
 
     public function penjualan()
     {
