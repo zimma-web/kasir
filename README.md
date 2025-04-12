@@ -50,7 +50,7 @@ Aplikasi Kasir adalah sistem point of sale (POS) berbasis web yang dibangun meng
 
 1. Clone repository
    ```bash
-   git clone https://github.com/username/kasir-aplikasi.git
+   git clone https://github.com/zimma-web/kasir-aplikasi.git
    cd kasir-aplikasi
    ```
 
