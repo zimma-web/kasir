@@ -106,7 +106,11 @@
             </div>
             @endif
 
-            <div class="text-center mt-8">
+            <div class="text-center mt-8 space-x-4">
+                <a href="{{ route('checkout.print', $penjualan->id) }}" target="_blank"
+                    class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                    Cetak Struk
+                </a>
                 <a href="{{ route('pembelian.index') }}"
                     class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     Kembali ke Daftar Transaksi

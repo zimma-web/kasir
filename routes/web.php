@@ -65,6 +65,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::get('/checkout/success/{id}', [CheckoutController::class, 'show'])->name('checkout.success');
+    Route::get('/checkout/print/{id}', [CheckoutController::class, 'printReceipt'])->name('checkout.print');
     Route::get('search', [ProdukController::class, 'search'])->name('produk.search');
     Route::resource('produk', ProdukController::class);
     Route::resource('stok', StokController::class);

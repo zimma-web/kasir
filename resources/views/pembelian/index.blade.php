@@ -1,4 +1,54 @@
 <x-app-layout>
+    <link rel="preload" as="image" href="{{ asset('assets/tango.jpg') }}">
+    <style>
+        #loading {
+            display: none;
+        }
+        .loading-card {
+            width: 400px;
+            height: 250px;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        .loading-bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+        }
+        .loading-bg img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .loading-content {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.75);
+            padding: 1.5rem;
+            backdrop-filter: blur(4px);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+
+    <!-- Loading Overlay -->
+    <div id="loading" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="loading-card shadow-xl">
+            <div class="loading-bg">
+                <img src="{{ asset('assets/tango.jpg') }}" alt="Loading background">
+            </div>
+            <div class="loading-content">
+                <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+                <p class="mt-3 text-center font-medium text-gray-700">Loading...</p>
+            </div>
+        </div>
+    </div>
+
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
             {{ __('Pilih Produk') }}
@@ -88,12 +138,25 @@
             <!-- Product Grid -->
             <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 @forelse ($produk as $item)
-                    <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700 group">
-                        <div class="p-5">
-                            <div class="flex flex-col h-full">
-                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">{{ $item->nama_produk }}</h3>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700 group w-full max-w-[280px] mx-auto flex flex-col">
+                        <div class="h-[200px] flex items-center justify-center p-4 bg-white flex-shrink-0">
+                            @if($item->gambar)
+                                <img src="{{ asset('storage/' . $item->gambar) }}" 
+                                     alt="{{ $item->nama_produk }}" 
+                                     class="max-h-full w-auto object-contain">
+                            @else
+                                <div class="w-full h-full flex items-center justify-center bg-gray-100 rounded">
+                                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="p-4 flex flex-col flex-grow justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white leading-tight">{{ $item->nama_produk }}</h3>
                                 
-                                <div class="flex items-center gap-2 mb-3">
+                                <div class="flex items-center gap-2 mt-1">
                                     <span class="flex items-center gap-1 {{ $item->stok > 0 ? 'text-green-500' : 'text-red-500' }}">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -103,17 +166,16 @@
                                     </span>
                                 </div>
 
-                                <div class="flex items-center justify-between mt-auto">
-                                    <p class="text-xl font-bold text-blue-600 dark:text-blue-400">
+                                <div class="flex items-center justify-between mt-2">
+                                    <p class="text-lg font-bold text-blue-600 dark:text-blue-400">
                                         Rp.{{ number_format($item->harga, 0, ',', '.') }}
                                     </p>
                                     <button type="button"
                                         onclick="addToCart('{{ $item->id }}', '{{ $item->nama_produk }}', {{ $item->harga }}, {{ $item->stok }})"
-                                        class="inline-flex items-center justify-center bg-green-500 hover:bg-green-600 text-white p-2 rounded-full transition-all duration-200 shadow-sm hover:shadow-md {{ $item->stok <= 0 ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                        class="inline-flex items-center justify-center bg-green-500 hover:bg-green-600 text-white w-8 h-8 rounded-full transition-all duration-200 shadow-sm hover:shadow-md {{ $item->stok <= 0 ? 'opacity-50 cursor-not-allowed' : '' }}"
                                         {{ $item->stok <= 0 ? 'disabled' : '' }}>
-                                        <svg class="w-5 h-5 transform group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                         </svg>
                                     </button>
                                 </div>
@@ -141,6 +203,15 @@
 </x-app-layout>
 
 <script>
+    // Show/hide loading overlay
+    $(document).ajaxStart(function() {
+        $("#loading").fadeIn(300);
+    });
+
+    $(document).ajaxComplete(function() {
+        $("#loading").fadeOut(300);
+    });
+
     function addToCart(produk_id, nama_produk, harga, stok) {
         if (stok <= 0) {
             alert('Maaf, stok produk habis!');

@@ -261,6 +261,12 @@ class CheckoutController extends Controller
         return view('checkout.success', compact('penjualan'));
     }
 
+    public function printReceipt($id)
+    {
+        $penjualan = Penjualan::with(['pelanggan', 'detailPenjualan.produk', 'petugas'])->findOrFail($id);
+        return view('checkout.receipt', compact('penjualan'));
+    }
+
     public function cekMember(Request $request)
     {
         try {

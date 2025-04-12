@@ -47,6 +47,7 @@
                     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                             <tr>
+                                <th scope="col" class="px-4 py-3">Gambar</th>
                                 <th scope="col" class="px-4 py-3">Nama Produk</th>
                                 <th scope="col" class="px-4 py-3">Harga</th>
                                 <th scope="col" class="px-4 py-3">Stok</th>
@@ -58,6 +59,19 @@
                         <tbody>
                             @forelse ($produk as $item)
                                 <tr class="border-b dark:border-gray-700">
+                                    <td class="px-4 py-3">
+                                        @if($item->gambar)
+                                            <img src="{{ asset('storage/' . $item->gambar) }}" 
+                                                 alt="{{ $item->nama_produk }}" 
+                                                 class="w-16 h-16 object-cover rounded">
+                                        @else
+                                            <div class="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
+                                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                            </div>
+                                        @endif
+                                    </td>
                                     <th scope="row"
                                         class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                         {{ $item->nama_produk }}

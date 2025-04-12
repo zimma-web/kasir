@@ -63,12 +63,17 @@ class PointSettingController extends Controller
 
     public function updateConversionRate(Request $request)
     {
-        $request->validate([
+        \Log::info('Point Setting Update Request:', $request->all());
+        
+        $validated = $request->validate([
             'points_to_rupiah' => 'required|integer|min:1',
             'amount_per_point' => 'required|numeric|min:1',
             'description' => 'nullable|string|max:255',
             'earning_description' => 'nullable|string|max:255'
         ]);
+
+        // Format amount_per_point to have max 2 decimal places
+        $validated['amount_per_point'] = number_format((float)$validated['amount_per_point'], 2, '.', '');
 
         try {
             DB::beginTransaction();
@@ -78,11 +83,17 @@ class PointSettingController extends Controller
                 $pointSetting = new PointSetting();
             }
 
-            $pointSetting->points_to_rupiah = $request->points_to_rupiah;
-            $pointSetting->amount_per_point = $request->amount_per_point;
-            $pointSetting->description = $request->description ?? 'Nilai konversi: 1 poin = Rp ' . $request->points_to_rupiah;
-            $pointSetting->earning_description = $request->earning_description ?? 'Rp ' . number_format($request->amount_per_point, 0, ',', '.') . ' = 1 poin';
+            \Log::info('Points to Rupiah:', ['value' => $validated['points_to_rupiah']]);
+            \Log::info('Amount per Point:', ['value' => $validated['amount_per_point']]);
+            
+            $pointSetting->points_to_rupiah = $validated['points_to_rupiah'];
+            $pointSetting->amount_per_point = $validated['amount_per_point'];
+            $pointSetting->description = $validated['description'] ?? 'Nilai konversi: 1 poin = Rp ' . $validated['points_to_rupiah'];
+            $pointSetting->earning_description = $validated['earning_description'] ?? 'Rp ' . number_format($validated['amount_per_point'], 0, ',', '.') . ' = 1 poin';
+            
+            \Log::info('Before save:', ['point_setting' => $pointSetting->toArray()]);
             $pointSetting->save();
+            \Log::info('After save successful');
 
             DB::commit();
 
@@ -90,8 +101,19 @@ class PointSettingController extends Controller
                 ->with('success', 'Pengaturan poin berhasil diperbarui!');
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Point Setting Update Error: ' . $e->getMessage());
+            
+            $errorMessage = 'Gagal memperbarui pengaturan poin. ';
+            if (str_contains($e->getMessage(), 'Data too long')) {
+                $errorMessage .= 'Nilai yang dimasukkan terlalu besar.';
+            } else if (str_contains($e->getMessage(), 'Incorrect decimal value')) {
+                $errorMessage .= 'Format angka tidak valid.';
+            } else {
+                $errorMessage .= $e->getMessage();
+            }
+            
             return redirect()->route('point-settings.index')
-                ->with('error', 'Gagal memperbarui pengaturan poin.');
+                ->with('error', $errorMessage);
         }
     }
 

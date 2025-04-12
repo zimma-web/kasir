@@ -7,6 +7,7 @@ use App\Http\Requests\StoreProdukRequest;
 use App\Http\Requests\UpdateProdukRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProdukController extends Controller
 {
@@ -36,13 +37,22 @@ class ProdukController extends Controller
             'nama_produk' => 'required|string|max:255',
             'harga' => 'required|numeric|min:1',
             'stok' => 'required|integer|min:1',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
-        Produk::create([
+        $data = [
             'nama_produk' => $request->nama_produk,
             'harga' => $request->harga,
             'stok' => $request->stok,
-        ]);
+        ];
+
+        if ($request->hasFile('gambar')) {
+            $gambar = $request->file('gambar');
+            $path = $gambar->store('produk', 'public');
+            $data['gambar'] = $path;
+        }
+
+        Produk::create($data);
 
         return redirect()->route('produk.index')->with('success', 'Produk berhasil ditambahkan.');
     }
@@ -72,7 +82,19 @@ class ProdukController extends Controller
             'nama_produk' => 'required|string|max:255',
             'harga' => 'required|numeric|min:1',
             'stok' => 'required|integer|min:1',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
+
+        if ($request->hasFile('gambar')) {
+            // Delete old image if exists
+            if ($produk->gambar) {
+                Storage::disk('public')->delete($produk->gambar);
+            }
+            
+            $gambar = $request->file('gambar');
+            $path = $gambar->store('produk', 'public');
+            $validated['gambar'] = $path;
+        }
 
         $produk->update($validated);
 
@@ -84,6 +106,10 @@ class ProdukController extends Controller
      */
     public function destroy(Produk $produk)
     {
+        if ($produk->gambar) {
+            Storage::disk('public')->delete($produk->gambar);
+        }
+        
         $produk->delete();
         return redirect()->route('produk.index')->with('success', 'Produk berhasil dihapus!');
     }

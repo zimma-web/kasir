@@ -59,13 +59,13 @@
                                     <label for="amount_per_point" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                         Jumlah Rupiah untuk 1 Poin
                                     </label>
-                                    <input type="number" 
+                                    <input type="text" 
                                            id="amount_per_point" 
                                            name="amount_per_point" 
-                                           value="{{ $pointSetting->amount_per_point ?? 10000 }}"
+                                           value="{{ number_format($pointSetting->amount_per_point ?? 10000, 2, '.', '') }}"
                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                           min="1"
-                                           step="1000">
+                                           pattern="^\d*\.?\d{0,2}$"
+                                           title="Masukkan angka dengan maksimal 2 angka di belakang koma">
                                     <p class="mt-1 text-sm text-gray-500">Contoh: Jika diisi 10000, maka setiap Rp 10.000 mendapat 1 poin</p>
                                 </div>
                                 <div>
@@ -252,8 +252,9 @@ function resetPoints(memberId) {
 // Add form validation
 document.getElementById('pointSettingsForm').addEventListener('submit', function(e) {
     const pointsToRupiah = parseInt(document.getElementById('points_to_rupiah').value);
-    const amountPerPoint = parseFloat(document.getElementById('amount_per_point').value);
-
+    const amountPerPointInput = document.getElementById('amount_per_point').value;
+    
+    // Validate points_to_rupiah
     if (!pointsToRupiah || pointsToRupiah < 1) {
         e.preventDefault();
         Swal.fire({
@@ -264,6 +265,19 @@ document.getElementById('pointSettingsForm').addEventListener('submit', function
         return;
     }
 
+    // Validate amount_per_point format
+    if (!amountPerPointInput.match(/^\d+\.?\d{0,2}$/)) {
+        e.preventDefault();
+        Swal.fire({
+            title: 'Error!',
+            text: 'Format jumlah rupiah tidak valid. Gunakan format angka dengan maksimal 2 angka di belakang koma',
+            icon: 'error'
+        });
+        return;
+    }
+
+    // Validate amount_per_point value
+    const amountPerPoint = parseFloat(amountPerPointInput);
     if (!amountPerPoint || amountPerPoint < 1) {
         e.preventDefault();
         Swal.fire({
